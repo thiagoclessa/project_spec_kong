@@ -1,0 +1,24 @@
+image: kong/inso:latest
+
+pipelines:
+  default:
+      - step:
+          name: 'Generete artifacts'
+          script:
+            - inso generate config spec.yaml -t kubernetes > ${{values.componentId}}.yaml
+            - cat ${{values.componentId}}.yaml
+            - mv ${{values.componentId}}.yaml ./artefatos
+          artifacts:
+            paths:
+            - artefatos/*.yaml
+
+      - step:
+          name: 'Update Repository'
+          image: alpine/git
+          script:
+            - ls -ltrh ./artefatos
+            - git config --global user.email "build@bitbucket.org"
+            - git config --global user.name "Bitbucket Pipeline"
+            - git add .
+            - git commit -m "update ${{values.componentId}} artifacts"
+            - git push origin master
